@@ -1,6 +1,57 @@
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const http = require('node:http');
+const { spawn } = require('node:child_process');
+
+let backendProcess = null;
+
+function ensureBackendRunning(onReady) {
+  const req = http.get('http://127.0.0.1:3001/health', (res) => {
+    if (res.statusCode === 200) {
+      console.log('[Desktop] Backend is already running on 127.0.0.1:3001');
+      if (onReady) onReady();
+      return;
+    }
+  });
+
+  req.on('error', () => {
+    console.log('[Desktop] Starting local backend server...');
+    const candidatePaths = [
+      path.join(__dirname, 'backend-dist', 'server.js'),
+      path.join(__dirname, '..', 'backend', 'dist', 'server.js'),
+    ];
+    const serverScript = candidatePaths.find((p) => fs.existsSync(p));
+
+    if (serverScript) {
+      try {
+        backendProcess = spawn(process.execPath, [serverScript], {
+          env: {
+            ...process.env,
+            ELECTRON_RUN_AS_NODE: '1',
+            PORT: '3001',
+            NODE_ENV: 'production',
+          },
+          stdio: 'ignore',
+        });
+
+        backendProcess.on('error', (err) => {
+          console.warn('[Desktop] Failed to spawn backend process:', err);
+        });
+
+        // Give server 600ms to bind port
+        setTimeout(() => {
+          if (onReady) onReady();
+        }, 600);
+      } catch (err) {
+        console.warn('[Desktop] Backend spawn exception:', err);
+        if (onReady) onReady();
+      }
+    } else {
+      if (onReady) onReady();
+    }
+  });
+}
 
 function createWindow() {
   const iconPath = path.join(__dirname, 'icon.png');
@@ -52,11 +103,21 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  ensureBackendRunning(() => {
+    createWindow();
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+app.on('will-quit', () => {
+  if (backendProcess) {
+    try {
+      backendProcess.kill();
+    } catch {}
+  }
 });
 
 app.on('window-all-closed', () => {

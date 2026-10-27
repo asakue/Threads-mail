@@ -137,6 +137,70 @@ export class SyncEngine {
       this.isSyncing = false;
     }
   }
+
+  /**
+   * Ingests a clean initial sync thread when a new mailbox account is connected
+   */
+  public ingestInitialAccountSync(account: { id: string; email: string; provider: string }): Conversation {
+    const providerLabel = account.provider === 'gmail' ? 'Google Workspace' : account.provider === 'yandex' ? 'Яндекс 360' : 'IMAP/SMTP';
+    const contactEmail = `system@threads.local`;
+    const contactId = `cnt_system_${Date.now()}`;
+    const newContact: Contact = {
+      id: contactId,
+      displayName: `Служба доставки ${providerLabel}`,
+      primaryEmail: contactEmail,
+      linkedEmails: [{ email: contactEmail, label: 'Шлюз', isPrimary: true, provider: account.provider as any }],
+      isService: true,
+      category: 'service',
+      totalMessagesExchanged: 1,
+      firstContactDate: new Date().toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }),
+    };
+
+    const convId = `conv_${Date.now()}`;
+    const timestamp = Date.now();
+    const cleanBody = `Почтовый ящик ${account.email} успешно подключен к клиенту Threads.
+
+Шлюз: ${providerLabel}
+Протокол: Zero-Knowledge End-to-End
+Режим: Очистка канцелярита и сквозное объединение цепочек активно.
+
+Теперь вы можете принимать и отправлять письма без лишнего шума и громоздких панелей.`;
+
+    const conversation: Conversation = {
+      id: convId,
+      contactId,
+      contact: newContact,
+      subjectContext: `Подключение ящика ${account.email}`,
+      lastMessageSnippet: `Ящик ${account.email} успешно синхронизирован`,
+      lastMessageTimestamp: timestamp,
+      unreadCount: 1,
+      isArchived: false,
+      category: 'service',
+      providerBadge: account.provider === 'yandex' ? 'yandex' : 'gmail',
+      totalMessages: 1,
+    };
+
+    const message: Message = {
+      id: `msg_sync_${Date.now()}`,
+      conversationId: convId,
+      providerMessageId: `<welcome-${Date.now()}@threads.local>`,
+      provider: account.provider as any,
+      sender: { name: `Служба доставки ${providerLabel}`, email: contactEmail },
+      recipients: [account.email],
+      subject: `Подключение ящика ${account.email}`,
+      timestamp,
+      isOutgoing: false,
+      status: 'delivered',
+      cleanBody,
+      attachments: [],
+    };
+
+    emailStore.createConversationWithContact(newContact, conversation);
+    emailStore.appendRawMessage(convId, message);
+
+    realtimeHub.broadcast('conversation_created', { conversation, message });
+    return conversation;
+  }
 }
 
 export const syncEngine = new SyncEngine();

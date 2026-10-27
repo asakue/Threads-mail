@@ -12,6 +12,8 @@ import { webhookRoutes } from './routes/webhooks.js';
 import { realtimeRoutes } from './routes/realtime.js';
 import { syncRoutes } from './routes/sync.js';
 import { outboxRoutes } from './routes/outbox.js';
+import { syncEngine } from './services/syncEngine.js';
+import { verifyImapCredentials } from './gateways/yandex.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -36,23 +38,32 @@ export async function buildServer() {
     crossOriginEmbedderPolicy: false,
   });
 
-  // 2. Strict CORS Allowlist (CWE-942 prevention)
+  // 2. Strict CORS Allowlist (CWE-942 prevention) with support for Electron file:// and local clients
   const ALLOWED_ORIGINS = new Set([
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
     'http://localhost',
     'capacitor://localhost',
+    'null',
   ]);
 
   await server.register(cors, {
     origin: (origin, cb) => {
-      // Allow non-browser clients (native mobile, Electron desktop, curl, node:test)
-      if (!origin) {
+      // Allow non-browser clients (native mobile, Electron desktop file://, curl, node:test)
+      if (!origin || origin === 'null' || origin.startsWith('file://')) {
         return cb(null, true);
       }
-      if (ALLOWED_ORIGINS.has(origin) || origin.startsWith('threads://') || origin.startsWith('app://')) {
+      if (
+        ALLOWED_ORIGINS.has(origin) ||
+        origin.startsWith('threads://') ||
+        origin.startsWith('app://') ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1')
+      ) {
         return cb(null, true);
       }
       cb(new Error('Blocked by CORS policy: Origin not allowed'), false);
@@ -356,13 +367,39 @@ export async function buildServer() {
     const body = request.body as {
       email: string;
       provider?: 'gmail' | 'yandex' | 'imap';
+      password?: string;
+      imapHost?: string;
+      imapPort?: number;
     };
     if (!body || !body.email || !body.email.includes('@')) {
-      return reply.code(400).send({ error: 'Valid email address is required' });
+      return reply.code(400).send({ error: 'Укажите корректный email адрес' });
     }
 
     const email = body.email.trim().toLowerCase();
-    const provider = body.provider || (email.includes('yandex') ? 'yandex' : 'gmail');
+    const provider = body.provider || (email.includes('yandex') ? 'yandex' : email.includes('gmail') ? 'gmail' : 'imap');
+
+    // If password provided for IMAP or Yandex, test verification
+    if (body.password && body.password.trim()) {
+      let host = body.imapHost;
+      const port = body.imapPort || 993;
+      if (!host) {
+        if (provider === 'yandex' || email.includes('yandex')) {
+          host = 'imap.yandex.ru';
+        } else if (provider === 'gmail' || email.includes('gmail')) {
+          host = 'imap.gmail.com';
+        } else if (email.includes('mail.ru')) {
+          host = 'imap.mail.ru';
+        }
+      }
+      if (host) {
+        server.log.info(`[IMAP] Verifying credentials for ${email} on ${host}:${port}...`);
+        const check = await verifyImapCredentials(host, port, email, body.password.trim());
+        if (!check.ok) {
+          return reply.code(401).send({ error: check.error || 'Ошибка авторизации IMAP' });
+        }
+      }
+    }
+
     const newAccount = {
       id: `acc-${Date.now()}`,
       email,
@@ -371,12 +408,15 @@ export async function buildServer() {
       status: 'synced' as const,
       lastSyncedTimestamp: Date.now(),
       latencyMs: 12,
-      totalMessagesIndexed: 0,
+      totalMessagesIndexed: 1,
     };
 
     emailStore.addAccount(newAccount);
 
-    realtimeHub.broadcast('account_connected', { account: newAccount });
+    // Ingest initial confirmation/welcome conversation in the user's feed
+    const syncConv = syncEngine.ingestInitialAccountSync(newAccount);
+
+    realtimeHub.broadcast('account_connected', { account: newAccount, conversation: syncConv });
 
     return {
       success: true,

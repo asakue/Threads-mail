@@ -10,6 +10,7 @@ yarn-debug.log*
 yarn-error.log*
 packages/desktop/release/
 packages/desktop/client-dist/
+packages/desktop/backend-dist/
 packages/client/android/.gradle/
 packages/client/android/app/build/
 packages/client/android/build/

@@ -25,25 +25,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newProvider, setNewProvider] = useState<'gmail' | 'yandex' | 'imap'>('gmail');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addError, setAddError] = useState('');
+  const [addSuccess, setAddSuccess] = useState('');
+
+  const handleEmailChange = (val: string) => {
+    setNewEmail(val);
+    const lower = val.toLowerCase();
+    if (lower.includes('yandex') || lower.endsWith('@ya.ru')) {
+      setNewProvider('yandex');
+    } else if (lower.includes('gmail')) {
+      setNewProvider('gmail');
+    } else if (lower.includes('mail.ru') || lower.includes('bk.ru') || lower.includes('inbox.ru')) {
+      setNewProvider('imap');
+    }
+  };
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim() || !newEmail.includes('@')) {
-      setAddError('Укажите корректный email');
+      setAddError('Укажите корректный email адрес');
       return;
     }
     setIsSubmitting(true);
     setAddError('');
-    const res = await addAccount(newEmail.trim(), newProvider);
+    setAddSuccess('');
+
+    const res = await addAccount(
+      newEmail.trim(),
+      newProvider,
+      newPassword.trim() || undefined
+    );
     setIsSubmitting(false);
-    if (res) {
+
+    if (res.success) {
+      setAddSuccess(`Ящик ${newEmail.trim()} успешно подключен!`);
       setNewEmail('');
-      setIsAdding(false);
-      onAccountsUpdated?.();
+      setNewPassword('');
+      setTimeout(() => {
+        setIsAdding(false);
+        setAddSuccess('');
+        onAccountsUpdated?.();
+      }, 600);
     } else {
-      setAddError('Не удалось подключить аккаунт');
+      setAddError(res.error || 'Не удалось подключить аккаунт');
     }
   };
 
@@ -117,17 +144,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Add account form or trigger */}
             {isAdding ? (
-              <form onSubmit={handleCreateAccount} className="p-3 rounded-xl bg-[#16161B] border border-white/10 space-y-2.5">
-                <div className="text-xs font-semibold text-white">Подключение нового ящика</div>
-                {addError && <div className="text-[11px] text-red-400">{addError}</div>}
+              <form onSubmit={handleCreateAccount} className="p-3.5 rounded-xl bg-[#16161B] border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-white">Подключение нового ящика</div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordInput(!showPasswordInput)}
+                    className="text-[11px] text-[#A1A1AA] hover:text-white transition flex items-center gap-1"
+                  >
+                    <span>{showPasswordInput ? 'Быстрый режим' : '+ Пароль приложения IMAP'}</span>
+                  </button>
+                </div>
+
+                {addError && (
+                  <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-[11px] text-red-400">
+                    {addError}
+                  </div>
+                )}
+
+                {addSuccess && (
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400">
+                    {addSuccess}
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
-                    placeholder="email@example.com"
+                    placeholder="ваш-email@yandex.ru / gmail.com"
                     value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     required
-                    className="flex-1 bg-[#121216] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/30"
+                    className="flex-1 bg-[#121216] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-[#52525B] focus:outline-none focus:border-white/30"
                   />
                   <select
                     value={newProvider}
@@ -139,12 +187,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <option value="imap">IMAP</option>
                   </select>
                 </div>
-                <div className="flex items-center justify-end gap-2 pt-1">
+
+                {showPasswordInput && (
+                  <div className="space-y-1">
+                    <input
+                      type="password"
+                      placeholder="Пароль приложения (App Password)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-[#121216] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-[#52525B] focus:outline-none focus:border-white/30"
+                    />
+                    <p className="text-[10px] text-[#71717A] leading-tight">
+                      Для Яндекс: создайте в Яндекс ID → Безопасность → Пароли приложений. Для быстрого теста можно оставить пустым.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-white/5">
                   <button
                     type="button"
                     onClick={() => {
                       setIsAdding(false);
                       setAddError('');
+                      setAddSuccess('');
+                      setNewPassword('');
                     }}
                     className="px-3 py-1 rounded-lg text-xs text-[#71717A] hover:text-white transition"
                   >
@@ -153,16 +219,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-3.5 py-1 rounded-lg bg-white text-black text-xs font-medium hover:bg-[#E5E5E7] transition disabled:opacity-40"
+                    className="px-3.5 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-[#E5E5E7] transition disabled:opacity-40 flex items-center gap-1.5"
                   >
-                    {isSubmitting ? 'Подключение...' : 'Подключить'}
+                    {isSubmitting && <i className="ph-bold ph-spinner animate-spin text-xs"></i>}
+                    <span>{isSubmitting ? 'Подключение...' : 'Подключить ящик'}</span>
                   </button>
                 </div>
               </form>
             ) : (
               <button
                 type="button"
-                onClick={() => setIsAdding(true)}
+                onClick={() => {
+                  setIsAdding(true);
+                  setAddError('');
+                  setAddSuccess('');
+                }}
                 className="w-full py-2.5 border border-dashed border-white/10 hover:border-white/20 rounded-xl text-[#71717A] hover:text-white transition flex items-center justify-center gap-2 text-xs"
               >
                 <i className="ph-bold ph-plus text-xs"></i>

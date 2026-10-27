@@ -1,7 +1,7 @@
 import { Conversation, Message, Contact, AccountSyncStatus, TelemetryStats } from './types';
 
-const API_BASE = (typeof window !== 'undefined' && window.location.protocol === 'file:')
-  ? 'http://localhost:3001/api'
+const API_BASE = (typeof window !== 'undefined' && (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5173')))
+  ? 'http://127.0.0.1:3001/api'
   : '/api';
 
 let cachedSessionToken: string | null = null;
@@ -137,22 +137,35 @@ export async function createConversation(
   }
 }
 
+export interface AddAccountResult {
+  success: boolean;
+  account?: AccountSyncStatus;
+  error?: string;
+}
+
 export async function addAccount(
   email: string,
-  provider?: 'gmail' | 'yandex' | 'imap'
-): Promise<AccountSyncStatus | null> {
+  provider?: 'gmail' | 'yandex' | 'imap',
+  password?: string,
+  imapHost?: string
+): Promise<AddAccountResult> {
   try {
     const res = await secureFetch(`${API_BASE}/accounts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, provider }),
+      body: JSON.stringify({ email, provider, password, imapHost }),
     });
-    if (!res.ok) throw new Error('Failed to add account');
-    const data = await res.json();
-    return data.account;
-  } catch (err) {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: data.error || `Ошибка подключения (${res.status})` };
+    }
+    return { success: true, account: data.account };
+  } catch (err: any) {
     console.error('Failed to add account', err);
-    return null;
+    return {
+      success: false,
+      error: 'Не удалось связаться с бэкендом (порт 3001). Запустите сервер: npm run server',
+    };
   }
 }
 

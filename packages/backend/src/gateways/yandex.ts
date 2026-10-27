@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import crypto from 'node:crypto';
+import tls from 'node:tls';
 import { declutterEmailContent, Message, classifySmartCategory } from '@vibery/shared';
 import { sanitizeHeader } from '../security/sanitizer.js';
 
@@ -7,6 +8,73 @@ export interface YandexAccountConfig {
   email: string;
   appPassword?: string;
   oauthToken?: string;
+}
+
+export async function verifyImapCredentials(
+  host: string,
+  port: number,
+  user: string,
+  pass: string,
+  timeoutMs = 6000
+): Promise<{ ok: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    let settled = false;
+    let buffer = '';
+
+    const socket = tls.connect(
+      {
+        host,
+        port,
+        servername: host,
+        timeout: timeoutMs,
+        rejectUnauthorized: false,
+      },
+      () => {
+        // Socket connected to IMAP TLS
+      }
+    );
+
+    socket.on('data', (chunk) => {
+      buffer += chunk.toString('utf-8');
+      if (buffer.includes('* OK') && !buffer.includes('a001')) {
+        // Server banner received, send login command
+        socket.write(`a001 LOGIN "${user}" "${pass}"\r\n`);
+      } else if (buffer.includes('a001 OK')) {
+        if (!settled) {
+          settled = true;
+          try {
+            socket.write('a002 LOGOUT\r\n');
+            socket.end();
+          } catch {}
+          resolve({ ok: true });
+        }
+      } else if (buffer.includes('a001 NO') || buffer.includes('a001 BAD')) {
+        if (!settled) {
+          settled = true;
+          try {
+            socket.write('a002 LOGOUT\r\n');
+            socket.end();
+          } catch {}
+          resolve({ ok: false, error: 'IMAP сервер отклонил логин/пароль. Проверьте пароль приложения.' });
+        }
+      }
+    });
+
+    socket.on('timeout', () => {
+      if (!settled) {
+        settled = true;
+        try { socket.destroy(); } catch {}
+        resolve({ ok: false, error: `Таймаут соединения с ${host}:${port}` });
+      }
+    });
+
+    socket.on('error', (err) => {
+      if (!settled) {
+        settled = true;
+        resolve({ ok: false, error: `Ошибка соединения: ${err.message}` });
+      }
+    });
+  });
 }
 
 export interface RawImapEmail {

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "prebuild": "node -e \"const fs = require('fs'); fs.cpSync('../client/dist', './client-dist', { recursive: true, force: true }); console.log('client-dist copied');\"",
+    "prebuild": "node -e \"const fs = require('fs'); fs.cpSync('../client/dist', './client-dist', { recursive: true, force: true }); fs.cpSync('../backend/dist', './backend-dist', { recursive: true, force: true }); console.log('client-dist and backend-dist copied');\"",
     "build:exe": "npm run prebuild && npx electron-builder --win --x64"
   },
   "author": "Threads Team <contact@threads.mail>",
@@ -42,7 +42,8 @@
     "files": [
       "main.js",
       "preload.js",
-      "client-dist/**/*"
+      "client-dist/**/*",
+      "backend-dist/**/*"
     ]
   },
   "devDependencies": {
