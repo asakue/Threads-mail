@@ -1,0 +1,19 @@
+{
+  "name": "vibery-workspace",
+  "version": "1.0.0",
+  "description": "Vibery - Chat-first email messenger over Gmail & Yandex",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "server": "npm run dev --workspace=@vibery/backend",
+    "client": "npm run dev --workspace=@vibery/client",
+    "desktop": "npm start --workspace=@vibery/desktop"
+  },
+  "keywords": ["email", "messenger", "gmail", "yandex", "chat", "local-first"],
+  "author": "Vibery Team",
+  "license": "MIT"
+}

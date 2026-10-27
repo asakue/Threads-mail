@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ВАЙБЕРЫ // Design System & UI Flow Board</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons for high-precision interface symbols -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            vibery: {
+              black: '#0D0D0E',
+              dark: '#141416',
+              surface: '#1D1D1F',
+              border: '#2C2C2E',
+              slate: '#86868B',
+              lightGray: '#F5F5F7',
+              blue: '#0071E3',
+              accentRed: '#FF453A',
+              accentGreen: '#30D158'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbars and styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #141416;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2C2C2E;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #48484A;
+    }
+
+    /* Architectural grid canvas background */
+    .blueprint-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+    .light-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    }
+
+    /* iPhone 16 Pro titanium bezel wrapper */
+    .device-shell {
+      width: 375px;
+      height: 770px;
+      border-radius: 50px;
+      box-shadow: 0 0 0 10px #242426, 0 0 0 12px #3a3a3c, 0 25px 60px -15px rgba(0, 0, 0, 0.9);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      width: 108px;
+      height: 28px;
+      background: #000;
+      border-radius: 20px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+
+    /* Touch gesture swipe demo */
+    .swipe-active {
+      transform: translateX(-70px);
+    }
+
+    /* Custom logo caret character */
+    .logo-font {
+      letter-spacing: -0.05em;
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body class="bg-vibery-black text-[#E5E5E7] font-sans antialiased selection:bg-white selection:text-black overflow-x-hidden min-h-screen">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="border-b border-vibery-border bg-vibery-dark/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <!-- Brand / Team identity -->
+    <div class="flex items-center gap-5">
+      <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchView('board')">
+        <!-- Exact vector representation of team mark ВАЙБЕРЫ with sharp geometric caret -->
+        <span class="text-2xl font-black tracking-tight text-white inline-flex items-baseline font-mono uppercase">
+          ВА<span class="relative inline-block">И<span class="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-white"></span></span>БЕРЫ
+        </span>
+        <span class="ml-2 text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-white/10 text-vibery-slate border border-white/5">DESIGN SYSTEM // LAB</span>
+      </div>
+      <div class="hidden md:flex items-center text-xs text-vibery-slate gap-2 font-mono">
+        <span class="w-2 h-2 rounded-full bg-vibery-accentGreen animate-pulse"></span>
+        <span>HACKATHON CORE // PROD SPEC 2026</span>
+      </div>
+    </div>
+
+    <!-- Navigation tabs for the design board -->
+    <nav class="flex items-center gap-1 bg-vibery-surface p-1 rounded-xl border border-vibery-border text-xs font-medium">
+      <button onclick="switchView('board')" id="btn-view-board" class="px-3.5 py-1.5 rounded-lg bg-white text-black font-semibold shadow-sm transition">
+        <i class="ph-bold ph-squares-four mr-1"></i> Общая доска (6 экранов)
+      </button>
+      <button onclick="switchView('single')" id="btn-view-single" class="px-3.5 py-1.5 rounded-lg text-vibery-slate hover:text-white transition">
+        <i class="ph-bold ph-device-mobile mr-1"></i> Инспектор экрана
+      </button>
+      <button onclick="switchView('uikit')" id="btn-view-uikit" class="px-3.5 py-1.5 rounded-lg text-vibery-slate hover:text-white transition">
+        <i class="ph-bold ph-palette mr-1"></i> UI Kit & Токены
+      </button>
+    </nav>
+
+    <!-- Global Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Device Theme Toggle -->
+      <button onclick="toggleMockupTheme()" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-vibery-border bg-vibery-surface hover:bg-white/5 transition text-vibery-slate hover:text-white" title="Переключить тему экранов устройства (Светлая / Темная)">
+        <i id="theme-icon" class="ph-bold ph-sun text-sm"></i>
+        <span id="theme-label">Тема экранов: Dark</span>
+      </button>
+      <!-- Zoom reset -->
+      <button onclick="resetBoardZoom()" class="p-2 rounded-lg border border-vibery-border bg-vibery-surface hover:bg-white/5 text-vibery-slate hover:text-white text-xs" title="Сбросить масштаб">
+        <i class="ph-bold ph-arrows-out"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SUBHEADER / CONCEPT MANIFESTO STRIP -->
+  <div class="bg-vibery-surface/50 border-b border-vibery-border/60 px-6 py-2.5 flex flex-wrap items-center justify-between text-xs text-vibery-slate">
+    <div class="flex items-center gap-2">
+      <span class="text-white font-medium">Концепция:</span>
+      <span>«Почта, которая выглядит и ощущается как мессенджер поверх существующих аккаунтов Gmail & Яндекс»</span>
+    </div>
+    <div class="flex items-center gap-4 text-[11px] font-mono">
+      <span>GMAIL OAUTH: <span class="text-vibery-accentGreen">CONNECTED</span></span>
+      <span>YANDEX IMAP: <span class="text-vibery-accentGreen">SYNCED</span></span>
+      <span>LATENCY: <span class="text-white">12ms</span></span>
+    </div>
+  </div>
+
+  <!-- MAIN INTERACTIVE CANVAS -->
+  <main class="relative w-full overflow-hidden min-h-[calc(100vh-100px)]">
+
+    <!-- ==================== VIEW 1: THE FULL MULTI-SCREEN BOARD ==================== -->
+    <div id="view-board" class="blueprint-grid p-8 lg:p-12 overflow-x-auto min-w-full">
+      
+      <!-- Flow description header in the canvas -->
+      <div class="mb-8 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-mono text-vibery-slate uppercase tracking-wider">// UI FLOW & ARCHITECTURE</span>
+          <h1 class="text-xl font-bold text-white tracking-tight mt-0.5">Карта всех ключевых экранов приложения</h1>
+          <p class="text-xs text-vibery-slate mt-1 max-w-2xl">
+            Сквозное проектирование мобильного клиента: от первого контакта в общем инбоксе до тонкой очистки служебных заголовков письма внутри пузырей чата.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-vibery-slate">МАСШТАБ СЕТКИ: 100%</span>
+        </div>
+      </div>
+
+      <!-- The 6 iPhone mockups row -->
+      <div class="flex items-start gap-10 pb-16 overflow-x-auto">
+        
+        <!-- ================= SCREEN 1: INBOX / DIALOGS ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">01 // ВХОДЯЩИЕ / ЧАТЫ</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">INBOX VIEW</span>
+          </div>
+
+          <!-- Phone frame 1 -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen" id="screen-inbox">
+            <!-- Dynamic Island -->
+            <div class="dynamic-island">
+              <span class="text-[9px] text-zinc-400 font-mono">9:41</span>
+              <div class="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+            </div>
+
+            <!-- iOS Status Bar Spacer -->
+            <div class="h-12 w-full pt-3 px-7 flex justify-between items-center text-[11px] font-semibold">
+              <span>9:41</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <i class="ph-bold ph-wifi-high"></i>
+                <i class="ph-bold ph-battery-charging text-sm"></i>
+              </div>
+            </div>
+
+            <!-- App Header: Inbox -->
+            <div class="px-5 pt-2 pb-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-black tracking-tight">Чаты</span>
+                  <!-- Unified Mailbox pill -->
+                  <div class="flex items-center gap-1 text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                    <span class="text-zinc-300">Gmail + Яндекс</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 text-lg">
+                  <button class="hover:text-vibery-slate transition"><i class="ph-bold ph-magnifying-glass"></i></button>
+                  <button class="hover:text-vibery-slate transition"><i class="ph-bold ph-note-pencil"></i></button>
+                </div>
+              </div>
+
+              <!-- Quick Categories Pills -->
+              <div class="flex items-center gap-1.5 mt-3 overflow-x-hidden text-[11px]">
+                <span class="px-3 py-1 rounded-full bg-white text-black font-semibold">Все</span>
+                <span class="px-3 py-1 rounded-full bg-white/10 text-zinc-300 border border-white/5">Люди (4)</span>
+                <span class="px-3 py-1 rounded-full bg-white/10 text-zinc-300 border border-white/5">Сервисы</span>
+                <span class="px-3 py-1 rounded-full bg-white/10 text-zinc-300 border border-white/5">Чеки</span>
+              </div>
+            </div>
+
+            <!-- Dialogs / Thread List -->
+            <div class="flex-1 overflow-y-auto divide-y divide-white/5 text-sm">
+              
+              <!-- Chat Item 1: Active with swipe action preview -->
+              <div class="relative overflow-hidden group">
+                <!-- Swipe action reveal underlayer -->
+                <div class="absolute inset-0 bg-vibery-blue flex items-center justify-end px-5 text-white text-xs font-semibold">
+                  <i class="ph-bold ph-archive-box text-lg mr-1"></i> Архив
+                </div>
+                <!-- Card content -->
+                <div class="relative bg-vibery-dark p-3.5 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition" onclick="previewScreenDetail('screen-dialog')">
+                  <!-- Avatar with online indicator -->
+                  <div class="relative flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" class="w-12 h-12 rounded-full object-cover border border-white/10" alt="Avatar">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-vibery-accentGreen border-2 border-vibery-dark"></span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-0.5">
+                      <span class="font-bold text-white truncate text-[13px]">Алёна Романова</span>
+                      <span class="text-[10px] text-zinc-400">11:42</span>
+                    </div>
+                    <div class="text-[11px] text-vibery-slate truncate">Re: Финальный питч хакатона 2026</div>
+                    <div class="text-xs text-zinc-300 truncate mt-0.5">Я подготовила слайды архитектуры, чекни вложения...</div>
+                  </div>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class="w-2 h-2 rounded-full bg-vibery-blue"></span>
+                    <span class="text-[9px] font-mono text-zinc-500">GMAIL</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat Item 2: Company / Service (GitHub) -->
+              <div class="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition">
+                <div class="w-12 h-12 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center flex-shrink-0 text-white text-xl">
+                  <i class="ph-bold ph-github-logo"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-0.5">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-white text-[13px]">GitHub Enterprise</span>
+                      <i class="ph-fill ph-seal-check text-blue-400 text-xs"></i>
+                    </div>
+                    <span class="text-[10px] text-zinc-400">Вчера</span>
+                  </div>
+                  <div class="text-[11px] text-vibery-slate truncate">[vibery/hackathon-app] CI/CD Pipeline succeeded</div>
+                  <div class="text-xs text-zinc-400 truncate mt-0.5">Build #140 deployed to staging server in 38s</div>
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-[9px] font-mono text-zinc-500">YANDEX</span>
+                </div>
+              </div>
+
+              <!-- Chat Item 3: Banking / Finance (Тинькофф/Т-Банк) -->
+              <div class="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition">
+                <div class="w-12 h-12 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center flex-shrink-0 text-lg font-black">
+                  T
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-0.5">
+                    <span class="font-bold text-white text-[13px]">Т-Банк Бизнес</span>
+                    <span class="text-[10px] text-zinc-400">24 окт</span>
+                  </div>
+                  <div class="text-[11px] text-vibery-slate truncate">Электронный чек по операции #9821</div>
+                  <div class="text-xs text-zinc-400 truncate mt-0.5">Оплата подписки облачных серверов Yandex Cloud</div>
+                </div>
+                <div class="text-[9px] font-mono text-zinc-500">GMAIL</div>
+              </div>
+
+              <!-- Chat Item 4: Teammate (Dmitriy) -->
+              <div class="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition">
+                <div class="relative flex-shrink-0">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces" class="w-12 h-12 rounded-full object-cover border border-white/10" alt="Avatar">
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-0.5">
+                    <span class="font-bold text-white text-[13px]">Дмитрий (ML Lead)</span>
+                    <span class="text-[10px] text-zinc-400">23 окт</span>
+                  </div>
+                  <div class="text-[11px] text-vibery-slate truncate">Веса модели обучены</div>
+                  <div class="text-xs text-zinc-400 truncate mt-0.5">Модель сжата до 40MB, работает локально в ONNX</div>
+                </div>
+                <div class="text-[9px] font-mono text-zinc-500">YANDEX</div>
+              </div>
+
+              <!-- Chat Item 5: Airline / Tickets -->
+              <div class="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition">
+                <div class="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0 text-lg">
+                  <i class="ph-bold ph-airplane-tilt"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-0.5">
+                    <span class="font-bold text-white text-[13px]">Аэрофлот</span>
+                    <span class="text-[10px] text-zinc-400">19 окт</span>
+                  </div>
+                  <div class="text-[11px] text-vibery-slate truncate">Маршрутная квитанция на рейс SU-1142</div>
+                  <div class="text-xs text-zinc-400 truncate mt-0.5">Электронный посадочный талон прикреплен</div>
+                </div>
+                <div class="text-[9px] font-mono text-zinc-500">GMAIL</div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <div class="border-t border-white/10 bg-vibery-dark/95 backdrop-blur px-6 py-2.5 flex items-center justify-between text-xs text-zinc-400">
+              <div class="flex flex-col items-center text-white font-medium">
+                <i class="ph-fill ph-chats-circle text-lg"></i>
+                <span class="text-[10px] mt-0.5">Чаты</span>
+              </div>
+              <div class="flex flex-col items-center hover:text-white transition cursor-pointer" onclick="switchView('board')">
+                <i class="ph-bold ph-funnel text-lg"></i>
+                <span class="text-[10px] mt-0.5">Фильтры</span>
+              </div>
+              <div class="flex flex-col items-center hover:text-white transition cursor-pointer" onclick="switchView('board')">
+                <i class="ph-bold ph-address-book text-lg"></i>
+                <span class="text-[10px] mt-0.5">Контакты</span>
+              </div>
+              <div class="flex flex-col items-center hover:text-white transition cursor-pointer" onclick="switchView('board')">
+                <i class="ph-bold ph-gear text-lg"></i>
+                <span class="text-[10px] mt-0.5">Настройки</span>
+              </div>
+            </div>
+
+            <!-- iOS Home Indicator -->
+            <div class="h-5 w-full flex justify-center items-center pb-1">
+              <div class="w-32 h-1 bg-white/30 rounded-full"></div>
+            </div>
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Один диалог на человека, свайп для архива</span>
+        </div>
+
+
+        <!-- ================= SCREEN 2: CHAT VIEW (CONVERSATION) ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">02 // ДИАЛОГ / ТРЕД ПИСЬМА</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">CHAT THREAD</span>
+          </div>
+
+          <!-- Phone frame 2 -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen" id="screen-dialog">
+            <!-- Dynamic Island -->
+            <div class="dynamic-island">
+              <span class="text-[9px] text-zinc-400 font-mono">9:41</span>
+              <div class="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+            </div>
+
+            <!-- iOS Status Bar -->
+            <div class="h-12 w-full pt-3 px-7 flex justify-between items-center text-[11px] font-semibold">
+              <span>9:41</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <i class="ph-bold ph-wifi-high"></i>
+                <i class="ph-bold ph-battery-charging text-sm"></i>
+              </div>
+            </div>
+
+            <!-- Conversation Header -->
+            <div class="px-4 py-2 border-b border-white/5 flex items-center justify-between bg-vibery-dark">
+              <div class="flex items-center gap-2.5">
+                <button class="text-zinc-400 hover:text-white"><i class="ph-bold ph-caret-left text-xl"></i></button>
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" class="w-9 h-9 rounded-full object-cover border border-white/10" alt="Avatar">
+                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-vibery-accentGreen border border-vibery-dark"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-white leading-tight">Алёна Романова</div>
+                  <div class="text-[10px] text-vibery-slate font-mono">alyona@designlab.io</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 text-zinc-400 text-base">
+                <button title="История темы"><i class="ph-bold ph-tag"></i></button>
+                <button title="Опции"><i class="ph-bold ph-dots-three-vertical"></i></button>
+              </div>
+            </div>
+
+            <!-- Topic pill bar (email subject context) -->
+            <div class="bg-white/[0.03] px-4 py-1.5 flex items-center justify-between text-[10px] text-zinc-400 border-b border-white/5">
+              <div class="flex items-center gap-1.5 truncate">
+                <i class="ph-bold ph-paperclip text-zinc-500"></i>
+                <span class="truncate">Тема: Финальный питч хакатона 2026 // Архитектура</span>
+              </div>
+              <span class="font-mono text-zinc-500 flex-shrink-0">3 письма</span>
+            </div>
+
+            <!-- Chat Messages Stream -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
+              
+              <!-- Date separator -->
+              <div class="flex justify-center">
+                <span class="text-[10px] font-mono text-zinc-500 bg-white/5 px-2.5 py-0.5 rounded-full">Сегодня, 27 октября</span>
+              </div>
+
+              <!-- Message 1: Incoming (stripped corporate greeting) -->
+              <div class="flex items-start gap-2 max-w-[85%]">
+                <div class="bg-vibery-surface border border-white/5 rounded-2xl rounded-tl-sm p-3 text-zinc-200">
+                  <p class="leading-relaxed">
+                    Привет, команда! Собрали итоговый пайплайн для презентации перед жюри. Очистили интерфейс от лишнего визуального мусора.
+                  </p>
+                  <span class="text-[9px] font-mono text-zinc-500 block text-right mt-1.5">10:14 • Gmail</span>
+                </div>
+              </div>
+
+              <!-- Message 2: Outgoing bubble -->
+              <div class="flex items-start justify-end">
+                <div class="max-w-[85%] bg-white text-black font-medium rounded-2xl rounded-tr-sm p-3 shadow-md">
+                  <p class="leading-relaxed">
+                    Отлично! Главное покажите, что мы не заменяем ящики, а даем слой мессенджера поверх существующих серверов.
+                  </p>
+                  <div class="flex items-center justify-end gap-1 text-[9px] text-zinc-600 font-mono mt-1">
+                    <span>10:20</span>
+                    <i class="ph-bold ph-checks text-xs"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message 3: Incoming with clean PDF Card -->
+              <div class="flex items-start gap-2 max-w-[88%]">
+                <div class="bg-vibery-surface border border-white/5 rounded-2xl rounded-tl-sm p-3 text-zinc-200 space-y-2">
+                  <p class="leading-relaxed">
+                    Прикрепила готовую спецификацию и схему потоков в PDF. Исходники в Figma тоже обновили:
+                  </p>
+                  <!-- Clean PDF Attachment card -->
+                  <div class="bg-black/40 border border-white/10 rounded-xl p-2.5 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                        PDF
+                      </div>
+                      <div class="truncate">
+                        <div class="text-xs font-semibold text-white truncate">Pitch_Deck_Vibery.pdf</div>
+                        <div class="text-[10px] font-mono text-zinc-500">4.2 MB • Слайды 1-12</div>
+                      </div>
+                    </div>
+                    <button class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition text-xs">
+                      <i class="ph-bold ph-download-simple"></i>
+                    </button>
+                  </div>
+                  <span class="text-[9px] font-mono text-zinc-500 block text-right">10:42 • Gmail</span>
+                </div>
+              </div>
+
+              <!-- Quick suggestion chips -->
+              <div class="flex items-center gap-1.5 pt-1 overflow-x-hidden">
+                <button class="text-[10px] bg-white/10 hover:bg-white/20 text-zinc-300 px-2.5 py-1 rounded-full transition border border-white/5">
+                  👍 Принято, смотрю
+                </button>
+                <button class="text-[10px] bg-white/10 hover:bg-white/20 text-zinc-300 px-2.5 py-1 rounded-full transition border border-white/5">
+                  📁 Сохранить в проект
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Composer (Messenger input bar) -->
+            <div class="p-3 bg-vibery-surface/80 border-t border-white/5">
+              <div class="flex items-center gap-2 bg-vibery-dark border border-white/10 rounded-2xl px-3 py-1.5">
+                <button class="text-zinc-400 hover:text-white text-base"><i class="ph-bold ph-paperclip"></i></button>
+                <input type="text" placeholder="Быстрый ответ письмом..." class="bg-transparent text-xs text-white placeholder-zinc-500 flex-1 outline-none">
+                <button class="text-zinc-400 hover:text-white text-base"><i class="ph-bold ph-microphone"></i></button>
+                <button class="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center hover:opacity-90 transition">
+                  <i class="ph-bold ph-arrow-up text-xs font-bold"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- iOS Home Indicator -->
+            <div class="h-5 w-full flex justify-center items-center pb-1">
+              <div class="w-32 h-1 bg-white/30 rounded-full"></div>
+            </div>
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Очищенные письма-пузыри, PDF и быстрый ответ</span>
+        </div>
+
+
+        <!-- ================= SCREEN 3: CONTACT & PROFILE ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">03 // КОНТАКТЫ И ПРОФИЛЬ</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">CONTACT DOSSIER</span>
+          </div>
+
+          <!-- Phone frame 3 -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen" id="screen-contact">
+            <!-- Dynamic Island -->
+            <div class="dynamic-island">
+              <span class="text-[9px] text-zinc-400 font-mono">9:41</span>
+              <div class="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="h-12 w-full pt-3 px-7 flex justify-between items-center text-[11px] font-semibold">
+              <span>9:41</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <i class="ph-bold ph-wifi-high"></i>
+                <i class="ph-bold ph-battery-charging text-sm"></i>
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-4 py-2 flex items-center justify-between">
+              <button class="text-zinc-400 hover:text-white"><i class="ph-bold ph-caret-left text-xl"></i></button>
+              <span class="text-xs font-bold uppercase tracking-wider font-mono text-vibery-slate">ПРОФИЛЬ КОНТАКТА</span>
+              <button class="text-zinc-400 hover:text-white"><i class="ph-bold ph-share-network text-lg"></i></button>
+            </div>
+
+            <!-- Contact Hero Card -->
+            <div class="px-5 py-4 text-center border-b border-white/5">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&h=160&fit=crop&crop=faces" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-white/20 shadow-lg" alt="Avatar">
+              <h2 class="text-base font-bold text-white mt-2">Алёна Романова</h2>
+              <p class="text-xs text-zinc-400">Lead Product Designer • DesignLab Inc.</p>
+              
+              <!-- Action pills -->
+              <div class="flex justify-center gap-4 mt-3">
+                <button class="flex flex-col items-center gap-1 text-[10px] text-zinc-300 hover:text-white">
+                  <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm"><i class="ph-bold ph-chat-circle-dots"></i></div>
+                  <span>Написать</span>
+                </button>
+                <button class="flex flex-col items-center gap-1 text-[10px] text-zinc-300 hover:text-white">
+                  <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm"><i class="ph-bold ph-magnifying-glass"></i></div>
+                  <span>Поиск</span>
+                </button>
+                <button class="flex flex-col items-center gap-1 text-[10px] text-zinc-300 hover:text-white">
+                  <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm"><i class="ph-bold ph-bell-slash"></i></div>
+                  <span>Без звука</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Profile Details / Unified aliases -->
+            <div class="flex-1 overflow-y-auto px-5 py-3 space-y-4 text-xs">
+              
+              <!-- Section: Linked email addresses -->
+              <div>
+                <span class="text-[10px] font-mono uppercase text-vibery-slate tracking-wider">СВЯЗАННЫЕ АДРЕСА ПОЧТЫ</span>
+                <div class="mt-2 space-y-1.5">
+                  <div class="p-2.5 rounded-xl bg-vibery-surface border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div class="font-semibold text-white text-xs">alyona@designlab.io</div>
+                      <div class="text-[10px] text-zinc-400">Корпоративная (Google Workspace)</div>
+                    </div>
+                    <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">ОСНОВНОЙ</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-vibery-surface border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div class="font-semibold text-white text-xs">romanova.design@yandex.ru</div>
+                      <div class="text-[10px] text-zinc-400">Личная почта (Яндекс)</div>
+                    </div>
+                    <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-white/5 text-zinc-400">ALIAS</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shared Attachments Gallery -->
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-mono uppercase text-vibery-slate tracking-wider">ОБЩИЕ ВЛОЖЕНИЯ (14)</span>
+                  <a href="#" class="text-[10px] text-vibery-blue hover:underline">Все файлы</a>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                  <div class="bg-black/40 border border-white/10 rounded-lg p-2 flex flex-col items-center justify-center text-center">
+                    <i class="ph-bold ph-file-pdf text-red-400 text-lg"></i>
+                    <span class="text-[9px] text-zinc-300 truncate w-full mt-1">Pitch_Deck.pdf</span>
+                  </div>
+                  <div class="bg-black/40 border border-white/10 rounded-lg p-2 flex flex-col items-center justify-center text-center">
+                    <i class="ph-bold ph-file-archive text-amber-400 text-lg"></i>
+                    <span class="text-[9px] text-zinc-300 truncate w-full mt-1">Icons_svg.zip</span>
+                  </div>
+                  <div class="bg-black/40 border border-white/10 rounded-lg p-2 flex flex-col items-center justify-center text-center">
+                    <i class="ph-bold ph-file-doc text-blue-400 text-lg"></i>
+                    <span class="text-[9px] text-zinc-300 truncate w-full mt-1">Brief_v2.docx</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- History stats -->
+              <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] space-y-1">
+                <div class="flex justify-between text-zinc-400">
+                  <span>Первое письмо:</span>
+                  <span class="text-white font-mono">14 авг 2025</span>
+                </div>
+                <div class="flex justify-between text-zinc-400">
+                  <span>Всего сообщений в треде:</span>
+                  <span class="text-white font-mono">48 сообщений</span>
+                </div>
+                <div class="flex justify-between text-zinc-400">
+                  <span>Среднее время ответа:</span>
+                  <span class="text-vibery-accentGreen font-mono">~18 минут</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- iOS Home Indicator -->
+            <div class="h-5 w-full flex justify-center items-center pb-1">
+              <div class="w-32 h-1 bg-white/30 rounded-full"></div>
+            </div>
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Единая карточка человека со всеми алиасами и файлами</span>
+        </div>
+
+
+        <!-- ================= SCREEN 4: SMART SORTING / FILTERS ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">04 // УМНАЯ СОРТИРОВКА</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">SMART FEEDS</span>
+          </div>
+
+          <!-- Phone frame 4 -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen" id="screen-filters">
+            <!-- Dynamic Island -->
+            <div class="dynamic-island">
+              <span class="text-[9px] text-zinc-400 font-mono">9:41</span>
+              <div class="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="h-12 w-full pt-3 px-7 flex justify-between items-center text-[11px] font-semibold">
+              <span>9:41</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <i class="ph-bold ph-wifi-high"></i>
+                <i class="ph-bold ph-battery-charging text-sm"></i>
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-5 pt-2 pb-3">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black tracking-tight">Категории</span>
+                <button class="text-zinc-400 hover:text-white"><i class="ph-bold ph-sliders-horizontal text-lg"></i></button>
+              </div>
+              <p class="text-xs text-vibery-slate mt-0.5">Нейросетевая группировка потока писем</p>
+            </div>
+
+            <!-- 4 Core Filter Channels -->
+            <div class="flex-1 overflow-y-auto px-4 space-y-2.5 text-xs">
+              
+              <!-- Channel 1: Humans / Direct Messages -->
+              <div class="p-3.5 rounded-2xl bg-vibery-surface border border-white/10 hover:border-white/20 transition cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-vibery-blue/20 text-vibery-blue flex items-center justify-center text-base">
+                      <i class="ph-bold ph-users"></i>
+                    </div>
+                    <div>
+                      <div class="font-bold text-white text-[13px]">Люди и Команда</div>
+                      <div class="text-[10px] text-zinc-400">Только живые собеседники</div>
+                    </div>
+                  </div>
+                  <span class="w-5 h-5 rounded-full bg-white text-black font-bold flex items-center justify-center text-[10px]">3</span>
+                </div>
+                <!-- Mini preview avatars -->
+                <div class="flex items-center gap-1.5 pt-1">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop" class="w-6 h-6 rounded-full border border-white/20">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop" class="w-6 h-6 rounded-full border border-white/20">
+                  <span class="text-[10px] text-zinc-500 font-mono ml-1">Алёна, Дмитрий, Михаил</span>
+                </div>
+              </div>
+
+              <!-- Channel 2: Services / Notifications -->
+              <div class="p-3.5 rounded-2xl bg-vibery-surface border border-white/5 hover:border-white/20 transition cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-base">
+                      <i class="ph-bold ph-bell-simple-ringing"></i>
+                    </div>
+                    <div>
+                      <div class="font-bold text-white text-[13px]">Сервисы и боты</div>
+                      <div class="text-[10px] text-zinc-400">GitHub, Figma, Notion, Sentry</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400">12 новых</span>
+                </div>
+                <div class="text-[11px] text-zinc-400 truncate bg-black/30 p-2 rounded-lg">
+                  <span class="text-white font-medium">Figma:</span> Иван оставил комментарий в макете "Vibery UI"...
+                </div>
+              </div>
+
+              <!-- Channel 3: Receipts & Finance -->
+              <div class="p-3.5 rounded-2xl bg-vibery-surface border border-white/5 hover:border-white/20 transition cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base">
+                      <i class="ph-bold ph-receipt"></i>
+                    </div>
+                    <div>
+                      <div class="font-bold text-white text-[13px]">Чеки и Финансы</div>
+                      <div class="text-[10px] text-zinc-400">Подписки, счета, квитанции</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-500">Обновлено</span>
+                </div>
+                <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg text-[11px]">
+                  <span class="text-zinc-300">Расходы за октябрь:</span>
+                  <span class="text-emerald-400 font-mono font-bold">14 290 ₽</span>
+                </div>
+              </div>
+
+              <!-- Channel 4: Action Tasks & Deadlines -->
+              <div class="p-3.5 rounded-2xl bg-vibery-surface border border-white/5 hover:border-white/20 transition cursor-pointer">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base">
+                      <i class="ph-bold ph-check-square-offset"></i>
+                    </div>
+                    <div>
+                      <div class="font-bold text-white text-[13px]">Требуют ответа</div>
+                      <div class="text-[10px] text-zinc-400">Письма с дедлайнами и вопросами</div>
+                    </div>
+                  </div>
+                  <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-mono flex items-center justify-center text-[10px]">2</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Action -->
+            <div class="p-3 border-t border-white/10">
+              <button class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition">
+                <i class="ph-bold ph-plus"></i> Настроить правила авто-сортировки
+              </button>
+            </div>
+
+            <!-- iOS Home Indicator -->
+            <div class="h-5 w-full flex justify-center items-center pb-1">
+              <div class="w-32 h-1 bg-white/30 rounded-full"></div>
+            </div>
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Люди отдельно от сервисов и спам-рассылок</span>
+        </div>
+
+
+        <!-- ================= SCREEN 5: SETTINGS & OAUTH ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">05 // НАСТРОЙКИ И OAUTH</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">ACCOUNTS & SYNC</span>
+          </div>
+
+          <!-- Phone frame 5 -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen" id="screen-settings">
+            <!-- Dynamic Island -->
+            <div class="dynamic-island">
+              <span class="text-[9px] text-zinc-400 font-mono">9:41</span>
+              <div class="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="h-12 w-full pt-3 px-7 flex justify-between items-center text-[11px] font-semibold">
+              <span>9:41</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <i class="ph-bold ph-wifi-high"></i>
+                <i class="ph-bold ph-battery-charging text-sm"></i>
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-5 pt-2 pb-3">
+              <span class="text-2xl font-black tracking-tight">Настройки</span>
+              <p class="text-xs text-vibery-slate mt-0.5">Управление почтовыми шлюзами</p>
+            </div>
+
+            <!-- Settings List -->
+            <div class="flex-1 overflow-y-auto px-4 space-y-4 text-xs">
+              
+              <!-- Block 1: Connected Mailboxes -->
+              <div>
+                <span class="text-[10px] font-mono uppercase text-vibery-slate tracking-wider">ПОДКЛЮЧЕННЫЕ АККАУНТЫ</span>
+                <div class="mt-2 space-y-2">
+                  <!-- Gmail connected -->
+                  <div class="p-3 rounded-xl bg-vibery-surface border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-7 h-7 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center font-bold text-xs">G</div>
+                      <div>
+                        <div class="font-bold text-white text-xs">team.vibery@gmail.com</div>
+                        <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Синхронизировано
+                        </div>
+                      </div>
+                    </div>
+                    <i class="ph-bold ph-check text-emerald-400"></i>
+                  </div>
+
+                  <!-- Yandex connected -->
+                  <div class="p-3 rounded-xl bg-vibery-surface border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-7 h-7 rounded-lg bg-yellow-400/10 text-yellow-500 flex items-center justify-center font-bold text-xs">Я</div>
+                      <div>
+                        <div class="font-bold text-white text-xs">lead@yandex.ru</div>
+                        <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Синхронизировано
+                        </div>
+                      </div>
+                    </div>
+                    <i class="ph-bold ph-check text-emerald-400"></i>
+                  </div>
+
+                  <!-- Add account button -->
+                  <button class="w-full py-2 border border-dashed border-white/20 hover:border-white/40 rounded-xl text-zinc-400 hover:text-white transition flex items-center justify-center gap-1.5 text-[11px]">
+                    <i class="ph-bold ph-plus"></i> Подключить Mail.ru / IMAP
+                  </button>
+                </div>
+              </div>
+
+              <!-- Block 2: Visual & Chat preferences -->
+              <div>
+                <span class="text-[10px] font-mono uppercase text-vibery-slate tracking-wider">ПОВЕДЕНИЕ МЕССЕНДЖЕРА</span>
+                <div class="mt-2 rounded-xl bg-vibery-surface border border-white/5 divide-y divide-white/5">
+                  <div class="p-3 flex items-center justify-between">
+                    <div>
+                      <div class="font-medium text-white text-xs">Срезать подписи и приветствия</div>
+                      <div class="text-[10px] text-zinc-400">Скрывать "С уважением..." в письмах</div>
+                    </div>
+                    <!-- Toggle switch ON -->
+                    <div class="w-9 h-5 bg-white rounded-full flex items-center justify-end px-0.5 cursor-pointer">
+                      <div class="w-4 h-4 bg-black rounded-full"></div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 flex items-center justify-between">
+                    <div>
+                      <div class="font-medium text-white text-xs">Свайп влево</div>
+                      <div class="text-[10px] text-zinc-400">Архивировать диалог</div>
+                    </div>
+                    <span class="text-[10px] font-mono text-vibery-slate">Архив &gt;</span>
+                  </div>
+
+                  <div class="p-3 flex items-center justify-between">
+                    <div>
+                      <div class="font-medium text-white text-xs">Сквозные треды без тем</div>
+                      <div class="text-[10px] text-zinc-400">Объединять разные письма контакта</div>
+                    </div>
+                    <!-- Toggle switch ON -->
+                    <div class="w-9 h-5 bg-white rounded-full flex items-center justify-end px-0.5 cursor-pointer">
+                      <div class="w-4 h-4 bg-black rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Privacy note -->
+              <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] text-zinc-400 flex items-start gap-2">
+                <i class="ph-bold ph-shield-check text-emerald-400 text-sm mt-0.5"></i>
+                <span>Все письма передаются напрямую между вашим устройством и серверами Google/Yandex без промежуточного сохранения на наших серверах.</span>
+              </div>
+
+            </div>
+
+            <!-- iOS Home Indicator -->
+            <div class="h-5 w-full flex justify-center items-center pb-1">
+              <div class="w-32 h-1 bg-white/30 rounded-full"></div>
+            </div>
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Прямой доступ через OAuth, без хранения данных</span>
+        </div>
+
+
+        <!-- ================= SCREEN 6: DESIGN SYSTEM TOKEN CARD ================= -->
+        <div class="flex flex-col items-center">
+          <div class="flex items-center justify-between w-full px-2 mb-3">
+            <span class="text-xs font-mono text-white font-bold">06 // СИСТЕМА ДИЗАЙНА</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-vibery-slate">SPEC SHEET</span>
+          </div>
+
+          <!-- Phone frame 6: UI Design System Specimen -->
+          <div class="device-shell bg-vibery-dark text-white mockup-screen p-5 overflow-y-auto">
+            
+            <!-- Brand mark specimen -->
+            <div class="border-b border-white/10 pb-4">
+              <span class="text-[9px] font-mono text-vibery-slate uppercase tracking-widest">// MASTER WORDMARK</span>
+              <div class="mt-2 text-2xl font-black tracking-tight text-white font-mono uppercase inline-flex items-baseline">
+                ВА<span class="relative inline-block">И<span class="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-white"></span></span>БЕРЫ
+              </div>
+              <p class="text-[10px] text-zinc-400 mt-1">Швейцарский плотный гротеск + авторская геометрия над буквой «Й».</p>
+            </div>
+
+            <!-- Color Palette Swatches -->
+            <div class="mt-4 border-b border-white/10 pb-4">
+              <span class="text-[9px] font-mono text-vibery-slate uppercase tracking-widest">// ЦВЕТОВЫЕ ТОКЕНЫ</span>
+              <div class="grid grid-cols-2 gap-2 mt-2">
+                <div class="p-2 rounded-lg bg-[#0D0D0E] border border-white/10">
+                  <div class="text-[10px] font-bold">#0D0D0E</div>
+                  <div class="text-[9px] text-zinc-400">Space Onyx</div>
+                </div>
+                <div class="p-2 rounded-lg bg-[#FFFFFF] text-black border border-white/10">
+                  <div class="text-[10px] font-bold">#FFFFFF</div>
+                  <div class="text-[9px] text-zinc-600">Pure White</div>
+                </div>
+                <div class="p-2 rounded-lg bg-[#1D1D1F] border border-white/10">
+                  <div class="text-[10px] font-bold">#1D1D1F</div>
+                  <div class="text-[9px] text-zinc-400">Card Surface</div>
+                </div>
+                <div class="p-2 rounded-lg bg-[#0071E3] text-white">
+                  <div class="text-[10px] font-bold">#0071E3</div>
+                  <div class="text-[9px] text-white/70">Focus Accent</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Typography hierarchy -->
+            <div class="mt-4 border-b border-white/10 pb-4">
+              <span class="text-[9px] font-mono text-vibery-slate uppercase tracking-widest">// ТИПОГРАФИКА</span>
+              <div class="mt-2 space-y-1.5 font-sans">
+                <div class="text-lg font-black tracking-tight leading-none">Title Large 24px</div>
+                <div class="text-sm font-bold text-zinc-200">Headline Bold 14px</div>
+                <div class="text-xs font-normal text-zinc-400">Body Regular 12px (Inter)</div>
+                <div class="text-[10px] font-mono text-vibery-slate">Code & Timestamp 10px (JetBrains)</div>
+              </div>
+            </div>
+
+            <!-- Interaction Principles -->
+            <div class="mt-4">
+              <span class="text-[9px] font-mono text-vibery-slate uppercase tracking-widest">// ПРИНЦИПЫ ИНТЕРФЕЙСА</span>
+              <ul class="mt-2 space-y-1.5 text-[11px] text-zinc-300">
+                <li class="flex items-center gap-1.5">
+                  <i class="ph-bold ph-check text-white text-xs"></i> 0% лишнего декора и градиентов
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <i class="ph-bold ph-check text-white text-xs"></i> Сообщения вместо канцелярита
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <i class="ph-bold ph-check text-white text-xs"></i> Моментальные жесты свайпа
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <i class="ph-bold ph-check text-white text-xs"></i> Кроссплатформенная синхронизация
+                </li>
+              </ul>
+            </div>
+
+          </div>
+          <span class="text-[11px] font-mono text-vibery-slate mt-2 text-center">Спецификация токенов, правил и сетки</span>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==================== VIEW 2: SINGLE SCREEN INSPECTOR WITH INTERACTIVE SWIPES ==================== -->
+    <div id="view-single" class="hidden p-8 max-w-5xl mx-auto flex flex-col md:flex-row gap-8 items-start">
+      <!-- Left side: Interactive Phone Playground -->
+      <div class="w-full md:w-auto flex justify-center">
+        <div id="interactive-phone-container" class="transition-all duration-300">
+          <!-- The content will be dynamically cloned or switched here -->
+        </div>
+      </div>
+
+      <!-- Right side: Screen deep-dive controls & explanation -->
+      <div class="flex-1 bg-vibery-surface border border-vibery-border p-6 rounded-2xl">
+        <div class="flex items-center justify-between border-b border-vibery-border pb-4">
+          <div>
+            <span class="text-xs font-mono text-vibery-blue uppercase tracking-wider">// РЕЖИМ ДЕТАЛЬНОГО ТЕСТИРОВАНИЯ</span>
+            <h2 id="inspector-title" class="text-xl font-bold text-white mt-1">Входящие / Список диалогов</h2>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="inspectScreen('inbox')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white">01</button>
+            <button onclick="inspectScreen('dialog')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white">02</button>
+            <button onclick="inspectScreen('contact')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white">03</button>
+            <button onclick="inspectScreen('filters')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white">04</button>
+            <button onclick="inspectScreen('settings')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white">05</button>
+          </div>
+        </div>
+
+        <div id="inspector-description" class="mt-4 space-y-4 text-xs text-zinc-300 leading-relaxed">
+          <!-- Content dynamically rendered via JS -->
+        </div>
+
+        <!-- Interactive gesture test triggers -->
+        <div class="mt-6 pt-4 border-t border-vibery-border">
+          <span class="text-xs font-bold text-white block mb-2 font-mono uppercase">ИНТЕРАКТИВНЫЕ ДЕЙСТВИЯ:</span>
+          <div class="flex flex-wrap gap-2" id="inspector-actions">
+            <!-- Buttons dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== VIEW 3: UI KIT & DESIGN TOKENS ==================== -->
+    <div id="view-uikit" class="hidden p-8 max-w-6xl mx-auto space-y-10">
+      
+      <!-- UI Kit Header -->
+      <div class="border-b border-vibery-border pb-6">
+        <span class="text-xs font-mono text-vibery-slate uppercase tracking-wider">// DESIGN FOUNDATIONS</span>
+        <h1 class="text-2xl font-bold text-white mt-1">UI Kit команды «ВАЙБЕРЫ» (Design System Spec)</h1>
+        <p class="text-xs text-vibery-slate mt-1 max-w-2xl">
+          Канонические элементы интерфейса: цветовые роли, типографика, состояния кнопок, пузыри сообщений и геометрия логотипа.
+        </p>
+      </div>
+
+      <!-- Section 1: Logo Anatomy & Guidelines -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-6 rounded-2xl bg-vibery-surface border border-vibery-border">
+          <span class="text-xs font-mono text-vibery-slate uppercase tracking-wider">ГЕОМЕТРИЯ ЗНАКА ВАЙБЕРЫ</span>
+          <div class="my-6 p-8 bg-black rounded-xl border border-white/10 flex items-center justify-center">
+            <span class="text-4xl font-black tracking-tight text-white font-mono uppercase inline-flex items-baseline">
+              ВА<span class="relative inline-block">И<span class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-white"></span></span>БЕРЫ
+            </span>
+          </div>
+          <p class="text-xs text-zinc-400">
+            Острый треугольный акцент строго над центральной осью буквы «Й» заменяет классическую мягкую дугу, подчеркивая архитектурную строгость и инженерную точность.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-vibery-surface border border-vibery-border">
+          <span class="text-xs font-mono text-vibery-slate uppercase tracking-wider">ИНВЕРСИЯ ЗНАКА (LIGHT / DARK)</span>
+          <div class="my-6 p-8 bg-white rounded-xl border border-zinc-200 flex items-center justify-center">
+            <span class="text-4xl font-black tracking-tight text-black font-mono uppercase inline-flex items-baseline">
+              ВА<span class="relative inline-block">И<span class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-black"></span></span>БЕРЫ
+            </span>
+          </div>
+          <p class="text-xs text-zinc-400">
+            Для белых фонов, бейджей мерча и светлой темы интерфейса используется глубокий оттенок чистого черного `#0D0D0E`.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 2: Component Library Specimen -->
+      <div class="p-6 rounded-2xl bg-vibery-surface border border-vibery-border space-y-6">
+        <span class="text-xs font-mono text-vibery-slate uppercase tracking-wider">КОМПОНЕНТЫ И СОСТОЯНИЯ</span>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Message Bubbles Spec -->
+          <div class="space-y-3">
+            <span class="text-xs font-bold text-white block">Пузыри сообщений (Bubbles)</span>
+            
+            <div class="bg-vibery-dark p-3 rounded-xl border border-white/5 space-y-2">
+              <div class="bg-vibery-surface p-2.5 rounded-xl rounded-tl-sm text-xs text-white border border-white/5">
+                Входящее сообщение: #1D1D1F с тонким 1px бордером
+              </div>
+              <div class="bg-white text-black font-medium p-2.5 rounded-xl rounded-tr-sm text-xs ml-auto max-w-[90%]">
+                Исходящее сообщение: чистый белый контраст
+              </div>
+            </div>
+          </div>
+
+          <!-- Buttons & Controls -->
+          <div class="space-y-3">
+            <span class="text-xs font-bold text-white block">Кнопки и Действия</span>
+            <div class="space-y-2">
+              <button class="w-full py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-zinc-200 transition">
+                Основное действие (Primary Action)
+              </button>
+              <button class="w-full py-2.5 rounded-xl bg-vibery-dark border border-white/10 text-white font-medium text-xs hover:bg-white/5 transition">
+                Второстепенное (Secondary Outline)
+              </button>
+              <button class="w-full py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 font-medium text-xs hover:bg-red-500/20 transition">
+                Опасное действие (Destructive)
+              </button>
+            </div>
+          </div>
+
+          <!-- Badges & Account Pills -->
+          <div class="space-y-3">
+            <span class="text-xs font-bold text-white block">Бейджи статусов и почтовых серверов</span>
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 font-mono text-[10px]">GMAIL OAUTH</span>
+                <span class="text-zinc-400 text-[11px]">Почта Google</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 font-mono text-[10px]">YANDEX IMAP</span>
+                <span class="text-zinc-400 text-[11px]">Яндекс.Почта</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px]">AI STRIPPED</span>
+                <span class="text-zinc-400 text-[11px]">Канцелярит удален</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- INTERACTIVE JS CONTROLLER -->
+  <script>
+    // State management
+    let currentMockupTheme = 'dark'; // 'dark' | 'light'
+    let activeInspectorKey = 'inbox';
+
+    // Descriptions data for inspector mode
+    const screenSpecs = {
+      inbox: {
+        title: "01 // Входящие: Человекоцентричная лента диалогов",
+        desc: `
+          <p><strong>Главное отличие от обычного почтовика:</strong> вместо хаоса из одинаковых строк «Тема + Отправитель» мы объединяем все письма одного корреспондента в один непрерывный тред диалога, как в Telegram.</p>
+          <ul class="list-disc pl-4 space-y-1 text-zinc-400">
+            <li>Крупные аватары людей и узнаваемые логотипы доверенных компаний (GitHub, банки, авиакомпании).</li>
+            <li>Сквозной поиск по человеку, тексту сообщения и вложениям.</li>
+            <li>Индикаторы подключенных аккаунтов (Gmail / Яндекс / Mail.ru) прямо в карточке переписки.</li>
+            <li>Моментальные жесты: свайп влево для мгновенного архивирования, свайп вправо для отметки прочитанным.</li>
+          </ul>
+        `,
+        actions: [
+          { label: "Симулировать свайп (Архив)", fn: "simulateSwipe()" },
+          { label: "Открыть диалог", fn: "inspectScreen('dialog')" }
+        ]
+      },
+      dialog: {
+        title: "02 // Диалог: Письма в виде чата без канцелярита",
+        desc: `
+          <p><strong>Очистка контента на лету:</strong> приложение автоматически отрезает служебные префиксы ("Уважаемый(ая)...", "В ответ на ваше письмо от..."), подписи с реквизитами компаний и цитирование прошлых 50 писем.</p>
+          <ul class="list-disc pl-4 space-y-1 text-zinc-400">
+            <li>Чистый пузырьковый интерфейс сообщений (белый для исходящих, серый для входящих).</li>
+            <li>Компактные карточки PDF, архивов и картинок с возможностью мгновенного предпросмотра без скачивания.</li>
+            <li>Поле ввода как в мессенджере с микрофоном для голосового ответа и умными автоответами (Quick chips).</li>
+            <li>При отправке сообщение автоматически упаковывается в стандартный почтовый RFC-формат, поэтому адресат в обычном Gmail видит корректное письмо.</li>
+          </ul>
+        `,
+        actions: [
+          { label: "Добавить демо-сообщение", fn: "simulateNewMessage()" },
+          { label: "Вернуться к списку", fn: "inspectScreen('inbox')" }
+        ]
+      },
+      contact: {
+        title: "03 // Профиль контакта: Единое досье переписки",
+        desc: `
+          <p><strong>Один человек — много адресов:</strong> коллеги часто пишут то с корпоративной почты, то с личной на Яндексе. Здесь они объединены в один контакт.</p>
+          <ul class="list-disc pl-4 space-y-1 text-zinc-400">
+            <li>Все когда-либо отправленные файлы и документы собраны в удобную галерею вложений.</li>
+            <li>Быстрый доступ к истории темы и возможность отключить уведомления от назойливых рассылок в 1 тап.</li>
+          </ul>
+        `,
+        actions: [
+          { label: "Перейти к диалогу", fn: "inspectScreen('dialog')" }
+        ]
+      },
+      filters: {
+        title: "04 // Умная сортировка: Радикальное разделение потоков",
+        desc: `
+          <p>В обычной почте важное письмо от заказчика или тимлида легко тонет среди 50 чеков из супермаркетов и спам-рассылок. Умная сортировка «Вайберов» категоризирует почту на 4 четких канала.</p>
+          <ul class="list-disc pl-4 space-y-1 text-zinc-400">
+            <li><strong>Люди:</strong> только живые переписки и коллеги (высочайший приоритет push-уведомлений).</li>
+            <li><strong>Сервисы:</strong> нотификации от GitHub, Jira, Figma, облачных серверов.</li>
+            <li><strong>Финансы:</strong> банковские выписки, чеки и подтверждения оплат с подсчетом суммы.</li>
+            <li><strong>Требуют ответа:</strong> письма, в которых задан вопрос или истекает дедлайн.</li>
+          </ul>
+        `,
+        actions: [
+          { label: "Смотреть входящие", fn: "inspectScreen('inbox')" }
+        ]
+      },
+      settings: {
+        title: "05 // Настройки: OAuth-интеграция без посредников",
+        desc: `
+          <p><strong>Приватность уровня Carol Christian Poell & Apple:</strong> мы не создаем свой почтовый сервис и не храним ваши письма в чужих базах данных.</p>
+          <ul class="list-disc pl-4 space-y-1 text-zinc-400">
+            <li>Прямое подключение по протоколам OAuth2 (Google) и защищенным IMAP/SMTP токенам (Яндекс, Mail.ru).</li>
+            <li>Настройка параметров срезания корпоративных футеров и кастомизация жестов свайпа.</li>
+          </ul>
+        `,
+        actions: [
+          { label: "Открыть инбокс", fn: "inspectScreen('inbox')" }
+        ]
+      }
+    };
+
+    // Switch between the 3 main views
+    function switchView(viewName) {
+      document.getElementById('view-board').classList.add('hidden');
+      document.getElementById('view-single').classList.add('hidden');
+      document.getElementById('view-uikit').classList.add('hidden');
+
+      // Reset button styles
+      document.getElementById('btn-view-board').className = "px-3.5 py-1.5 rounded-lg text-vibery-slate hover:text-white transition";
+      document.getElementById('btn-view-single').className = "px-3.5 py-1.5 rounded-lg text-vibery-slate hover:text-white transition";
+      document.getElementById('btn-view-uikit').className = "px-3.5 py-1.5 rounded-lg text-vibery-slate hover:text-white transition";
+
+      if (viewName === 'board') {
+        document.getElementById('view-board').classList.remove('hidden');
+        document.getElementById('btn-view-board').className = "px-3.5 py-1.5 rounded-lg bg-white text-black font-semibold shadow-sm transition";
+      } else if (viewName === 'single') {
+        document.getElementById('view-single').classList.remove('hidden');
+        document.getElementById('btn-view-single').className = "px-3.5 py-1.5 rounded-lg bg-white text-black font-semibold shadow-sm transition";
+        inspectScreen(activeInspectorKey);
+      } else if (viewName === 'uikit') {
+        document.getElementById('view-uikit').classList.remove('hidden');
+        document.getElementById('btn-view-uikit').className = "px-3.5 py-1.5 rounded-lg bg-white text-black font-semibold shadow-sm transition";
+      }
+    }
+
+    // Single screen inspector
+    function inspectScreen(key) {
+      activeInspectorKey = key;
+      switchView('single');
+
+      const data = screenSpecs[key];
+      if (!data) return;
+
+      document.getElementById('inspector-title').innerText = data.title;
+      document.getElementById('inspector-description').innerHTML = data.desc;
+
+      // Populate interactive buttons
+      const actionsContainer = document.getElementById('inspector-actions');
+      actionsContainer.innerHTML = '';
+      data.actions.forEach(action => {
+        const btn = document.createElement('button');
+        btn.className = "px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition border border-white/10";
+        btn.innerText = action.label;
+        btn.setAttribute('onclick', action.fn);
+        actionsContainer.appendChild(btn);
+      });
+
+      // Clone screen into container
+      const targetScreen = document.getElementById('screen-' + key);
+      const container = document.getElementById('interactive-phone-container');
+      container.innerHTML = '';
+      if (targetScreen) {
+        const clone = targetScreen.cloneNode(true);
+        clone.id = 'interactive-phone-clone';
+        container.appendChild(clone);
+      }
+    }
+
+    // Toggle Light / Dark theme inside the device frames
+    function toggleMockupTheme() {
+      const screens = document.querySelectorAll('.mockup-screen');
+      const isDark = currentMockupTheme === 'dark';
+
+      screens.forEach(screen => {
+        if (isDark) {
+          // Switch to Light Mode
+          screen.classList.remove('bg-vibery-dark', 'text-white');
+          screen.classList.add('bg-white', 'text-black');
+        } else {
+          // Switch to Dark Mode
+          screen.classList.remove('bg-white', 'text-black');
+          screen.classList.add('bg-vibery-dark', 'text-white');
+        }
+      });
+
+      currentMockupTheme = isDark ? 'light' : 'dark';
+      document.getElementById('theme-label').innerText = `Тема экранов: ${isDark ? 'Light' : 'Dark'}`;
+      document.getElementById('theme-icon').className = isDark ? 'ph-bold ph-moon text-sm' : 'ph-bold ph-sun text-sm';
+    }
+
+    // Simulate swipe on chat card
+    function simulateSwipe() {
+      const activeCard = document.querySelector('#interactive-phone-clone .group > div:last-child');
+      if (activeCard) {
+        activeCard.classList.toggle('swipe-active');
+      }
+    }
+
+    // Simulate sending a test message
+    function simulateNewMessage() {
+      const messagesContainer = document.querySelector('#interactive-phone-clone .space-y-3\\.5');
+      if (messagesContainer) {
+        const newBubble = document.createElement('div');
+        newBubble.className = "flex items-start justify-end";
+        newBubble.innerHTML = `
+          <div class="max-w-[85%] bg-white text-black font-medium rounded-2xl rounded-tr-sm p-3 shadow-md animate-fade-in">
+            <p class="leading-relaxed">Проверил, выглядит супер-чисто! Готовы показывать на защите.</p>
+            <div class="flex items-center justify-end gap-1 text-[9px] text-zinc-600 font-mono mt-1">
+              <span>Только что</span>
+              <i class="ph-bold ph-check text-xs"></i>
+            </div>
+          </div>
+        `;
+        messagesContainer.appendChild(newBubble);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+
+    // Shortcut to jump from canvas directly into inspector
+    function previewScreenDetail(screenId) {
+      const key = screenId.replace('screen-', '');
+      inspectScreen(key);
+    }
+
+    // Reset zoom or scroll to center
+    function resetBoardZoom() {
+      const board = document.getElementById('view-board');
+      if (board) {
+        board.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    }
+  </script>
+</body>
+</html>

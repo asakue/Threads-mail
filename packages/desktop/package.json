@@ -1,0 +1,14 @@
+{
+  "name": "@vibery/desktop",
+  "version": "1.0.0",
+  "description": "Vibery Native Desktop Application (Windows / macOS / Linux)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.2.1"
+  }
+}

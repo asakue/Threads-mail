@@ -1,0 +1,16 @@
+{
+  "name": "ВАЙБЕРЫ — Почта как мессенджер",
+  "short_name": "ВАЙБЕРЫ",
+  "description": "Почта, которая выглядит и ощущается как мессенджер поверх существующих ящиков Gmail и Яндекс",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D0E",
+  "theme_color": "#0D0D0E",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

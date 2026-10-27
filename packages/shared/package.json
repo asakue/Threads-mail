@@ -1,0 +1,16 @@
+{
+  "name": "@vibery/shared",
+  "version": "1.0.0",
+  "description": "Shared models, types, and email declutter engine for Vibery",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/declutter/cleaner.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}
