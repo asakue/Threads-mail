@@ -12,17 +12,24 @@ export interface EncryptedPayload {
  * Implements AES-256-GCM Envelope Encryption with authenticated data (AEAD).
  */
 export class TokenSecurityEngine {
+  private masterKey: Buffer;
   private static readonly ALGORITHM = 'aes-256-gcm';
   private static readonly IV_LENGTH = 12; // Standard 96-bit IV for GCM
   private static readonly AUTH_TAG_LENGTH = 16;
   private static readonly CURRENT_KEY_VERSION = 1;
 
-  // Master key derived or injected from KMS / environment
-  private masterKey: Buffer;
+  constructor(masterSecret?: string) {
+    const envSecret = masterSecret || process.env.THREADS_KMS_MASTER_SECRET || process.env.MASTER_KEY_HEX;
 
-  constructor(masterSecret = process.env.VIBERY_KMS_MASTER_SECRET || 'vibery-production-kms-master-secret-key-32b-length!!') {
-    // Ensure 256-bit key via SHA-256 derivation
-    this.masterKey = crypto.createHash('sha256').update(masterSecret).digest();
+    if (envSecret) {
+      this.masterKey = crypto.createHash('sha256').update(envSecret).digest();
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new Error('[Security Engine] FATAL: Production environment requires THREADS_KMS_MASTER_SECRET or MASTER_KEY_HEX to be set.');
+    } else {
+      // In development/test: generate ephemeral high-entropy 256-bit random key
+      console.warn('[Security Engine] WARNING: No KMS master key provided. Generating ephemeral in-memory 256-bit AES key.');
+      this.masterKey = crypto.randomBytes(32);
+    }
   }
 
   /**

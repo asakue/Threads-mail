@@ -10,15 +10,15 @@ export interface CleanOptions {
  * Regex patterns for bureaucratic corporate greetings (Russian & English).
  */
 const GREETING_PATTERNS = [
-  /^(Уважаемый(ая)?\s+[А-Яа-яЁёA-Za-z\s]+[,!]?)/i,
-  /^(Добрый\s+(день|вечер|утро)[,!]?)/i,
-  /^(Здравствуйте[,!]?)/i,
-  /^(Приветствую[,!]?)/i,
+  /^(Уважаемый(?:ая)?\s+[А-Яа-яЁёA-Za-z\s]+[,!]?)/i,
+  /^(Добрый\s+(?:день|вечер|утро)(?:,?\s+[А-Яа-яЁёA-Za-z\s]+)?[,!.]?)/i,
+  /^(Здравствуйте(?:,?\s+[А-Яа-яЁёA-Za-z\s]+)?[,!.]?)/i,
+  /^(Привет(?:ствую)?(?:,?\s+[А-Яа-яЁёA-Za-z\s]+)?[,!.]?)/i,
   /^(Доброго\s+времени\s+суток[,!]?)/i,
   /^(Dear\s+[A-Za-z\s]+[,!]?)/i,
-  /^(Hello\s+[A-Za-z\s]+[,!]?)/i,
-  /^(Hi\s+[A-Za-z\s]+[,!]?)/i,
-  /^(Good\s+(morning|afternoon|evening)[,!]?)/i,
+  /^(Hello(?:\s+[A-Za-z\s]+)?[,!.]?)/i,
+  /^(Hi(?:\s+[A-Za-z\s]+)?[,!.]?)/i,
+  /^(Good\s+(?:morning|afternoon|evening)[,!.]?)/i,
 ];
 
 /**
@@ -54,30 +54,49 @@ const DISCLAIMER_PATTERNS = [
 ];
 
 /**
- * Strips HTML tags and normalizes whitespace while protecting line breaks.
+ * Strips HTML tags and normalizes whitespace while protecting line breaks and preventing XSS.
  */
 export function htmlToCleanText(html: string): string {
   if (!html) return '';
 
   let text = html;
 
-  // Remove invisible tracking pixels: <img ... width="1" height="1" ...>
+  // 1. Defang dangerous URI schemes
+  text = text.replace(/javascript\s*:/gi, 'blocked-javascript:');
+  text = text.replace(/vbscript\s*:/gi, 'blocked-vbscript:');
+
+  // 2. Remove invisible tracking pixels: <img ... width="1" height="1" ...>
   text = text.replace(/<img[^>]+(?:width\s*=\s*["']?1["']?|height\s*=\s*["']?1["']?)[^>]*>/gi, '');
 
-  // Remove script and style tags
-  text = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  // 3. Remove script, style, svg, iframe, object, embed tags with contents (recursive for nested tags)
+  const dangerousTags = ['script', 'style', 'svg', 'iframe', 'object', 'embed'];
+  for (const tag of dangerousTags) {
+    const tagRegex = new RegExp(`<${tag}\\b[^<]*(?:(?!<\\/${tag}>)<[^<]*)*<\\/${tag}>`, 'gi');
+    while (tagRegex.test(text)) {
+      text = text.replace(tagRegex, '');
+    }
+  }
 
-  // Replace br and p closures with newlines
+  // 4. Remove unclosed dangerous tags like <svg ...>, <img ... onerror=...>, etc.
+  text = text.replace(/<\/?(?:script|style|svg|iframe|object|embed)\b[^>]*>/gi, '');
+
+  // 5. Replace br and p closures with newlines
   text = text.replace(/<br\s*[\/]?>/gi, '\n');
   text = text.replace(/<\/p>/gi, '\n\n');
   text = text.replace(/<\/div>/gi, '\n');
   text = text.replace(/<\/li>/gi, '\n');
 
-  // Strip all other HTML tags
-  text = text.replace(/<[^>]+>/g, '');
+  // 6. Strip all other HTML tags recursively until no markup remains
+  let prevText = '';
+  while (prevText !== text) {
+    prevText = text;
+    text = text.replace(/<[^>]+>/g, '');
+  }
 
-  // Decode common HTML entities
+  // 7. Strip inline event handler remnants (e.g. onload=..., onerror=...)
+  text = text.replace(/\bon[a-z]+\s*=\s*["'][^"']*["']/gi, '');
+
+  // 8. Decode common HTML entities
   text = text
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -86,7 +105,7 @@ export function htmlToCleanText(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 
-  // Normalize excessive vertical spaces (more than 2 newlines -> 2 newlines)
+  // 9. Normalize excessive vertical spaces (more than 2 newlines -> 2 newlines)
   text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
   return text;

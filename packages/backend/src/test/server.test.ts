@@ -31,47 +31,75 @@ test('Fastify server endpoints function correctly', async () => {
   const healthJson = JSON.parse(resHealth.body);
   assert.strictEqual(healthJson.status, 'ok');
 
-  // 2. Conversations
+  // 2. Connect account
+  const resAcc = await app.inject({
+    method: 'POST',
+    url: '/api/accounts',
+    payload: { email: 'developer@mycorp.com', provider: 'gmail' },
+  });
+  assert.strictEqual(resAcc.statusCode, 200);
+  const accJson = JSON.parse(resAcc.body);
+  assert.strictEqual(accJson.success, true);
+  assert.strictEqual(accJson.account.email, 'developer@mycorp.com');
+
+  // 3. Create a new conversation via Compose
+  const resCreateConv = await app.inject({
+    method: 'POST',
+    url: '/api/conversations',
+    payload: {
+      recipient: 'colleague@partner.com',
+      recipientName: 'Партнер',
+      subject: 'Сотрудничество по API',
+      body: 'Приветствую! Высылаю документацию по интеграции.',
+    },
+  });
+  assert.strictEqual(resCreateConv.statusCode, 200);
+  const createJson = JSON.parse(resCreateConv.body);
+  assert.strictEqual(createJson.success, true);
+  assert.ok(createJson.conversation.id);
+  const convId = createJson.conversation.id;
+  const contactId = createJson.conversation.contactId;
+
+  // 4. Retrieve conversations list
   const resConvs = await app.inject({ method: 'GET', url: '/api/conversations' });
   assert.strictEqual(resConvs.statusCode, 200);
   const convsJson = JSON.parse(resConvs.body);
-  assert.ok(convsJson.conversations.length >= 5, 'Should return seeded conversations');
+  assert.strictEqual(convsJson.conversations.length, 1);
+  assert.strictEqual(convsJson.conversations[0].id, convId);
 
-  // 3. Messages for Alyona
-  const resMsgs = await app.inject({ method: 'GET', url: '/api/conversations/conv-alyona/messages' });
-  assert.strictEqual(resMsgs.statusCode, 200);
-  const msgsJson = JSON.parse(resMsgs.body);
-  assert.strictEqual(msgsJson.messages.length, 3, 'Alyona conversation should have 3 messages');
-
-  // 4. Send a message
+  // 5. Send a reply in conversation
   const resSend = await app.inject({
     method: 'POST',
-    url: '/api/conversations/conv-alyona/messages',
-    payload: { text: 'Добрый день! Проверил макеты, выглядит супер.' },
+    url: `/api/conversations/${convId}/messages`,
+    payload: { text: 'Уточняю: доступ открыт в тестовом контуре.' },
   });
   assert.strictEqual(resSend.statusCode, 200);
   const sendJson = JSON.parse(resSend.body);
   assert.strictEqual(sendJson.success, true);
-  assert.strictEqual(sendJson.message.cleanBody, 'Проверил макеты, выглядит супер.');
+  assert.strictEqual(sendJson.message.cleanBody, 'Уточняю: доступ открыт в тестовом контуре.');
 
-  // 5. Swipe archive action
+  // 6. Messages list
+  const resMsgs = await app.inject({ method: 'GET', url: `/api/conversations/${convId}/messages` });
+  assert.strictEqual(resMsgs.statusCode, 200);
+  const msgsJson = JSON.parse(resMsgs.body);
+  assert.strictEqual(msgsJson.messages.length, 2);
+
+  // 7. Swipe archive action
   const resArchive = await app.inject({
     method: 'POST',
-    url: '/api/conversations/conv-aeroflot/archive',
+    url: `/api/conversations/${convId}/archive`,
   });
   assert.strictEqual(resArchive.statusCode, 200);
   const archiveJson = JSON.parse(resArchive.body);
   assert.strictEqual(archiveJson.isArchived, true);
 
-  // 6. Contact dossier
-  const resContact = await app.inject({ method: 'GET', url: '/api/contacts/cnt-alyona' });
+  // 8. Contact dossier
+  const resContact = await app.inject({ method: 'GET', url: `/api/contacts/${contactId}` });
   assert.strictEqual(resContact.statusCode, 200);
   const contactJson = JSON.parse(resContact.body);
-  assert.strictEqual(contactJson.contact.displayName, 'Алёна Романова');
-  assert.strictEqual(contactJson.contact.linkedEmails.length, 2, 'Should have 2 linked email aliases');
-  assert.ok(contactJson.sharedAttachments.length >= 1, 'Should include shared PDF');
+  assert.strictEqual(contactJson.contact.primaryEmail, 'colleague@partner.com');
 
-  // 7. Telemetry stats
+  // 9. Telemetry stats
   const resStats = await app.inject({ method: 'GET', url: '/api/telemetry/stats' });
   assert.strictEqual(resStats.statusCode, 200);
   const statsJson = JSON.parse(resStats.body);

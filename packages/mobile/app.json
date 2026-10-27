@@ -1,27 +1,27 @@
 {
   "expo": {
-    "name": "ВАЙБЕРЫ",
-    "slug": "vibery",
+    "name": "Threads",
+    "slug": "threads",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "backgroundColor": "#0D0D0E",
+      "backgroundColor": "#0A0A0C",
       "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.vibery.messenger",
+      "bundleIdentifier": "io.threads.mail",
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0D0D0E"
+        "backgroundColor": "#0A0A0C"
       },
-      "package": "io.vibery.messenger"
+      "package": "io.threads.mail"
     },
     "plugins": [
       [

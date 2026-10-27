@@ -1,6 +1,6 @@
-# @vibery/mobile — React Native & Expo Mobile Client
+# @threads/mobile — React Native & Expo Mobile Client
 
-Нативное мобильное приложение почтового мессенджера **«ВАЙБЕРЫ»** для iOS и Android.
+Нативное мобильное приложение **Threads** (почта без шума как переписка) для iOS и Android.
 
 ## Ключевые возможности
 - **Движок списков FlashList:** частота отрисовки 120 FPS в лентах на 50 000+ писем.

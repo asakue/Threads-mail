@@ -7,8 +7,8 @@ function createWindow() {
     height: 820,
     minWidth: 960,
     minHeight: 640,
-    backgroundColor: '#0D0D0E',
-    title: 'ВАЙБЕРЫ — Desktop',
+    backgroundColor: '#0A0A0C',
+    title: 'Threads',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -18,8 +18,8 @@ function createWindow() {
     },
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#141416',
-      symbolColor: '#E5E5E7',
+      color: '#111114',
+      symbolColor: '#EDEDED',
       height: 38,
     },
   });

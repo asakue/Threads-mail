@@ -1,11 +1,11 @@
 {
-  "name": "ВАЙБЕРЫ — Почта как мессенджер",
-  "short_name": "ВАЙБЕРЫ",
-  "description": "Почта, которая выглядит и ощущается как мессенджер поверх существующих ящиков Gmail и Яндекс",
+  "name": "Threads — Почта без шума",
+  "short_name": "Threads",
+  "description": "Почта как переписка: чистый текст и живой диалог поверх Gmail и Яндекс",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0D0D0E",
-  "theme_color": "#0D0D0E",
+  "background_color": "#0A0A0C",
+  "theme_color": "#0A0A0C",
   "icons": [
     {
       "src": "/icon.svg",

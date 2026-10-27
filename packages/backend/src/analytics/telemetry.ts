@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { TelemetryEvent } from '@vibery/shared';
+import { scrubPiiMetadata } from '../security/sanitizer.js';
 
 export interface LatencyStats {
   count: number;
@@ -20,7 +21,7 @@ export interface AnalyticsSummary {
 }
 
 export class TelemetryEngine {
-  private static readonly SALT = process.env.VIBERY_ANALYTICS_SALT || 'vibery-telemetry-salt-2026-anonymize';
+  private static readonly SALT = process.env.THREADS_ANALYTICS_SALT || process.env.VIBERY_ANALYTICS_SALT || 'threads-telemetry-salt-2026-anonymize';
   private events: TelemetryEvent[] = [];
   private syncLatencies: number[] = [];
   private cleanRatios: number[] = [];
@@ -52,8 +53,22 @@ export class TelemetryEngine {
    * Records a telemetry event in compliance with privacy-preserving policies.
    */
   public track(event: TelemetryEvent): void {
-    // Zero PII enforcement
-    this.events.push(event);
+    // Zero PII enforcement - scrub metadata and mask any raw email in anonymizedUserId
+    const safeUserId = event.anonymizedUserId && event.anonymizedUserId.includes('@')
+      ? this.anonymizeIdentity(event.anonymizedUserId)
+      : event.anonymizedUserId;
+
+    const safeMetadata = event.metadata
+      ? (scrubPiiMetadata(event.metadata as Record<string, unknown>, TelemetryEngine.SALT) as Record<string, any>)
+      : undefined;
+
+    const safeEvent: TelemetryEvent = {
+      ...event,
+      anonymizedUserId: safeUserId,
+      metadata: safeMetadata,
+    };
+
+    this.events.push(safeEvent);
     if (this.events.length > 5000) {
       this.events.shift(); // Keep ring buffer bounded
     }
