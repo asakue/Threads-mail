@@ -1,14 +1,51 @@
 {
-  "name": "@vibery/desktop",
+  "name": "threads-desktop",
+  "productName": "Threads",
   "version": "1.0.0",
-  "description": "Vibery Native Desktop Application (Windows / macOS / Linux)",
+  "description": "Threads - Minimalist, Fast Email Messenger",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron ."
+    "dev": "electron .",
+    "prebuild": "node -e \"const fs = require('fs'); fs.cpSync('../client/dist', './client-dist', { recursive: true, force: true }); console.log('client-dist copied');\"",
+    "build:exe": "npm run prebuild && npx electron-builder --win --x64"
   },
-  "dependencies": {},
+  "author": "Threads Team <contact@threads.mail>",
+  "build": {
+    "appId": "com.threads.mail",
+    "productName": "Threads",
+    "electronVersion": "33.4.11",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "client-dist/**/*"
+    ]
+  },
   "devDependencies": {
-    "electron": "^33.2.1"
+    "electron": "33.4.11"
   }
 }

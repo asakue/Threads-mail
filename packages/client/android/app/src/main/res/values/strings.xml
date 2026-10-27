@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Threads</string>
+    <string name="title_activity_main">Threads</string>
+    <string name="package_name">io.threads.mail</string>
+    <string name="custom_url_scheme">io.threads.mail</string>
+</resources>

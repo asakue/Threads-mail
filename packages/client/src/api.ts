@@ -1,6 +1,8 @@
 import { Conversation, Message, Contact, AccountSyncStatus, TelemetryStats } from './types';
 
-const API_BASE = '/api';
+const API_BASE = (typeof window !== 'undefined' && window.location.protocol === 'file:')
+  ? 'http://localhost:3001/api'
+  : '/api';
 
 let cachedSessionToken: string | null = null;
 

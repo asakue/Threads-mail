@@ -1,7 +1,9 @@
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'icon.png');
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -9,12 +11,13 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: '#0A0A0C',
     title: 'Threads',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
-      devTools: true,
+      sandbox: false,
+      devTools: false,
     },
     titleBarStyle: 'hidden',
     titleBarOverlay: {
@@ -24,9 +27,20 @@ function createWindow() {
     },
   });
 
-  // Load the Vite client URL
-  const appUrl = process.env.VIBERY_APP_URL || 'http://localhost:5173';
-  mainWindow.loadURL(appUrl);
+  // Determine what to load
+  const appUrl = process.env.VIBERY_APP_URL;
+  const packagedDist = path.join(__dirname, 'client-dist', 'index.html');
+  const monorepoDist = path.join(__dirname, '..', 'client', 'dist', 'index.html');
+
+  if (appUrl) {
+    mainWindow.loadURL(appUrl);
+  } else if (fs.existsSync(packagedDist)) {
+    mainWindow.loadFile(packagedDist);
+  } else if (fs.existsSync(monorepoDist)) {
+    mainWindow.loadFile(monorepoDist);
+  } else {
+    mainWindow.loadURL('http://localhost:5173');
+  }
 
   // Open external links in user's default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

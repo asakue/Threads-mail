@@ -1,0 +1,71 @@
+name: Build and Release Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published, created]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web client
+        run: npm run build --workspace=@vibery/client
+
+      - name: Sync Capacitor Android
+        run: |
+          cd packages/client
+          npx cap sync android
+
+      - name: Make Gradlew Executable
+        run: chmod +x packages/client/android/gradlew
+
+      - name: Build Android APK
+        run: |
+          cd packages/client/android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename and Prepare APK
+        run: |
+          mkdir -p artifacts
+          cp packages/client/android/app/build/outputs/apk/debug/app-debug.apk artifacts/Threads-1.0.0.apk
+          ls -lh artifacts/
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Threads-1.0.0.apk
+          path: artifacts/Threads-1.0.0.apk
+
+      - name: Upload APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.0.0 artifacts/Threads-1.0.0.apk --clobber || echo "Uploaded to release"
